@@ -352,21 +352,28 @@ async function main() {
 
     // Add Images
     for (let i = 0; i < prod.images.length; i++) {
-      await prisma.productImage.create({
-        data: {
-          productId: createdProd.id,
-          url: prod.images[i],
-          altText: `${prod.name} ${i + 1}`,
-          isThumbnail: i === 0,
-          sortOrder: i,
-        },
+      const existingImg = await prisma.productImage.findFirst({
+        where: { productId: createdProd.id, sortOrder: i },
       });
+      if (!existingImg) {
+        await prisma.productImage.create({
+          data: {
+            productId: createdProd.id,
+            url: prod.images[i],
+            altText: `${prod.name} ${i + 1}`,
+            isThumbnail: i === 0,
+            sortOrder: i,
+          },
+        });
+      }
     }
 
     // Add Variants
     for (const v of prod.variants) {
-      await prisma.productVariant.create({
-        data: {
+      await prisma.productVariant.upsert({
+        where: { sku: v.sku },
+        update: {},
+        create: {
           productId: createdProd.id,
           phoneModelId: model.id,
           colorName: v.colorName,

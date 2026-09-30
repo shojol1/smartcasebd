@@ -9,41 +9,50 @@ export const revalidate = 60; // ISR revalidate every 60 seconds
 
 export default async function HomePage() {
   // Fetch Brands, Bestsellers, New Arrivals, and Categories from Prisma DB
-  const [brands, bestsellers, newArrivals, categories] = await Promise.all([
-    prisma.brand.findMany({
-      where: { status: true },
-      include: {
-        series: {
-          include: {
-            models: { where: { status: true }, take: 4 },
+  let brands: any[] = [];
+  let bestsellers: any[] = [];
+  let newArrivals: any[] = [];
+  let categories: any[] = [];
+
+  try {
+    [brands, bestsellers, newArrivals, categories] = await Promise.all([
+      prisma.brand.findMany({
+        where: { status: true },
+        include: {
+          series: {
+            include: {
+              models: { where: { status: true }, take: 4 },
+            },
           },
         },
-      },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.product.findMany({
-      where: { status: "PUBLISHED", isBestseller: true },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        phoneModel: true,
-        variants: true,
-      },
-      take: 8,
-    }),
-    prisma.product.findMany({
-      where: { status: "PUBLISHED", isNewArrival: true },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        phoneModel: true,
-        variants: true,
-      },
-      take: 8,
-    }),
-    prisma.category.findMany({
-      where: { status: true },
-      take: 4,
-    }),
-  ]);
+        orderBy: { sortOrder: "asc" },
+      }),
+      prisma.product.findMany({
+        where: { status: "PUBLISHED", isBestseller: true },
+        include: {
+          images: { orderBy: { sortOrder: "asc" } },
+          phoneModel: true,
+          variants: true,
+        },
+        take: 8,
+      }),
+      prisma.product.findMany({
+        where: { status: "PUBLISHED", isNewArrival: true },
+        include: {
+          images: { orderBy: { sortOrder: "asc" } },
+          phoneModel: true,
+          variants: true,
+        },
+        take: 8,
+      }),
+      prisma.category.findMany({
+        where: { status: true },
+        take: 4,
+      }),
+    ]);
+  } catch (err) {
+    console.error("Error fetching homepage data:", err);
+  }
 
   return (
     <div className="space-y-16 pb-16">
@@ -148,7 +157,7 @@ export default async function HomePage() {
                   {b.name}
                 </h3>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  {b.series?.reduce((acc, s) => acc + s.models.length, 0)} Flagship Models
+                  {b.series?.reduce((acc: number, s: any) => acc + (s.models?.length || 0), 0) || 0} Flagship Models
                 </p>
               </div>
             </Link>

@@ -25,18 +25,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const sort = params.sort || "newest";
   const query = params.q || "";
 
-  // Fetch Brands with Series and Phone Models for filter dropdowns
-  const brands = await prisma.brand.findMany({
-    where: { status: true },
-    include: {
-      series: {
-        include: {
-          models: { where: { status: true }, orderBy: { sortOrder: "asc" } },
-        },
-      },
-    },
-    orderBy: { sortOrder: "asc" },
-  });
+  let brands: any[] = [];
+  let products: any[] = [];
 
   // Build Prisma query filters
   const where: any = {
@@ -69,24 +59,39 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   if (sort === "price-high") orderBy = { basePrice: "desc" };
   if (sort === "bestseller") orderBy = { isBestseller: "desc" };
 
-  // Fetch Products
-  const products = await prisma.product.findMany({
-    where,
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      phoneModel: true,
-      brand: true,
-      variants: true,
-    },
-    orderBy,
-  });
+  try {
+    brands = await prisma.brand.findMany({
+      where: { status: true },
+      include: {
+        series: {
+          include: {
+            models: { where: { status: true }, orderBy: { sortOrder: "asc" } },
+          },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    products = await prisma.product.findMany({
+      where,
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        phoneModel: true,
+        brand: true,
+        variants: true,
+      },
+      orderBy,
+    });
+  } catch (err) {
+    console.error("Error fetching shop data:", err);
+  }
 
   // Find active phone model name for banner badge
   let activeModelName = "";
   if (selectedModel) {
     for (const b of brands) {
-      for (const s of b.series) {
-        const m = s.models.find((mod) => mod.slug === selectedModel);
+      for (const s of b.series || []) {
+        const m = s.models?.find((mod: any) => mod.slug === selectedModel);
         if (m) {
           activeModelName = m.name;
           break;
@@ -174,9 +179,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                 .map((b) => (
                   <div key={b.id} className="space-y-1">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{b.name}</span>
-                    {b.series.map((s) => (
+                    {(b.series || []).map((s: any) => (
                       <div key={s.id} className="pl-1 space-y-1">
-                        {s.models.map((m) => (
+                        {(s.models || []).map((m: any) => (
                           <Link
                             key={m.id}
                             href={`/shop?brand=${b.slug}&model=${m.slug}`}
