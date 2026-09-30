@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Save, Trash2, ShieldCheck, Upload, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CASE_MATERIALS } from "@/lib/constants";
@@ -83,6 +83,31 @@ export default function NewProductPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  // Handle local file upload (Convert file to Base64 Data URL)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setImages((prev) => [...prev, result]);
+          toast.success("Local image uploaded!");
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = ""; // Reset file input
   };
 
   const handleAddImageUrl = () => {
@@ -284,28 +309,63 @@ export default function NewProductPage() {
             </label>
           </div>
 
-          {/* IMAGE URL GALLERY */}
+          {/* IMAGE URL & FILE UPLOAD GALLERY */}
           <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">3. High-Res Image Gallery</h3>
-              <Button type="button" onClick={handleAddImageUrl} variant="ghost" size="sm">
-                + Add Image URL
-              </Button>
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-brand-500" /> 3. Product Image Gallery
+              </h3>
             </div>
 
-            <div className="space-y-3">
+            {/* Local Upload & URL Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-brand-500 bg-brand-950/40 hover:bg-brand-950/70 text-brand-400 text-xs font-bold cursor-pointer transition-colors">
+                <Upload className="w-4 h-4" />
+                <span>Upload Local File</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={handleAddImageUrl}
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-zinc-800 bg-zinc-950 hover:bg-zinc-800 text-zinc-300 text-xs font-bold transition-colors"
+              >
+                <LinkIcon className="w-4 h-4" />
+                <span>Add Image URL</span>
+              </button>
+            </div>
+
+            <div className="space-y-3 pt-2">
               {images.map((url, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <Input
-                    value={url}
-                    onChange={(e) => handleImageChange(idx, e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                  {images.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveImage(idx)} className="p-2.5 text-zinc-500 hover:text-rose-400">
+                <div key={idx} className="p-3 rounded-xl border border-zinc-800 bg-zinc-950 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <img src={url} alt={`Preview ${idx + 1}`} className="w-12 h-12 object-cover rounded-lg bg-zinc-900 border border-zinc-800 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        {idx === 0 ? "★ Thumbnail Image" : `Image ${idx + 1}`}
+                      </p>
+                      <input
+                        type="text"
+                        value={url}
+                        onChange={(e) => handleImageChange(idx, e.target.value)}
+                        placeholder="Image URL or Base64 data..."
+                        className="w-full h-8 rounded border border-zinc-800 bg-zinc-900 px-2 text-xs text-zinc-300 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>

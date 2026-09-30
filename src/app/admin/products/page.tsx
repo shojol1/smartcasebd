@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Package, Plus, Search, ShieldCheck, Tag } from "lucide-react";
+import { Package, Plus, Search, ShieldCheck, Tag, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatBDT } from "@/lib/utils";
 import { toast } from "sonner";
@@ -27,6 +27,24 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Product deleted successfully");
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        toast.error("Failed to delete product");
+      }
+    } catch {
+      toast.error("Error deleting product");
+    }
+  };
 
   const filteredProducts = products.filter(
     (p) =>
@@ -73,18 +91,19 @@ export default function AdminProductsPage() {
               <th className="p-4">Stock Count</th>
               <th className="p-4">MagSafe</th>
               <th className="p-4">Status</th>
+              <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800 text-zinc-300">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-zinc-500">
+                <td colSpan={8} className="py-8 text-center text-zinc-500">
                   Loading products...
                 </td>
               </tr>
             ) : filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-zinc-500">
+                <td colSpan={8} className="py-8 text-center text-zinc-500">
                   No products found.
                 </td>
               </tr>
@@ -127,6 +146,21 @@ export default function AdminProductsPage() {
                       <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-900">
                         {p.status}
                       </span>
+                    </td>
+                    <td className="p-4 text-right space-x-2">
+                      <Link
+                        href={`/admin/products/${p.id}/edit`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-brand-400 bg-brand-950/50 border border-brand-800/80 hover:bg-brand-900/60 transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteProduct(p.id, p.name)}
+                        className="inline-flex items-center p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/50 transition-colors"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 );
