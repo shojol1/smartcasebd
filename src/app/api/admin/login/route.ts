@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     // Set HttpOnly Cookie
     response.cookies.set("smartcasebd_admin_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL),
       sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",

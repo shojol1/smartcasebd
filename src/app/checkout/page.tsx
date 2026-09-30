@@ -281,9 +281,9 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
-              <div className="p-3 rounded-xl border border-zinc-200 bg-zinc-50 opacity-60 text-xs text-zinc-500 flex justify-between items-center">
+              <div className="p-3 rounded-xl border border-zinc-200 bg-zinc-50 opacity-80 text-xs text-zinc-600 flex justify-between items-center">
                 <span>bKash / Nagad / Visa / Mastercard</span>
-                <span className="font-semibold text-zinc-600">Gateway Ready (Coming Soon)</span>
+                <span className="font-semibold text-zinc-700 bg-zinc-200/80 px-2 py-0.5 rounded">Pay on Delivery</span>
               </div>
             </div>
           </div>
